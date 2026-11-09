@@ -4,13 +4,13 @@
 
 PROG101: Principles of Programming Logic and Design | Assignment 1
 Limkokwing University of Creative Technology, Sierra Leone
-Department of Information and Communication Technology | Semester 01 (September 2026 to January 2027)
+Department of Information and Communication Technology | Semester 01
 
 | | |
 |---|---|
 | **Student** | Mohamed Turay |
 | **Student ID** | 905006574 |
-| **Examiner** | Elijah Fullah |
+| **Lecturer** | James Kanga |
 | **Tool** | Flowgorithm (flowchart and pseudocode) |
 
 > This assignment is a logical design. No source code is written, as required by the brief.
@@ -141,7 +141,7 @@ The system needs no internet or special hardware. Queue size, fairness limit and
 
 ## 11. Licence
 
-Released under the MIT Licence (add a `LICENSE` file to the repository).
+Released under the MIT Licence.
 
 ## 12. References
 
