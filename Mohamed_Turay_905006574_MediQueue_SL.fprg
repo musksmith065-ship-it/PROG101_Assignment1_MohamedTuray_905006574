@@ -1,0 +1,463 @@
+<?xml version="1.0"?>
+<flowgorithm fileversion="3.0">
+    <attributes>
+        <attribute name="name" value="MediQueue SL"/>
+        <attribute name="authors" value="Mohamed Turay"/>
+        <attribute name="about" value="PROG101 Assignment 1: triage and queue management system for Community Health Centres"/>
+        <attribute name="saved" value="2026-11-06 09:00:00 PM"/>
+    </attributes>
+    <function name="Main" type="None" variable="">
+        <parameters/>
+        <body>
+            <comment text="MediQueue SL - triage and queue management Mohamed Turay - 905006574 (PROG101 Assignment 1)"/>
+            <comment text="Constants (Flowgorithm has no constant statement, so they are set once here)"/>
+            <declare name="MaxQueueSize" type="Integer" array="False" size=""/>
+            <declare name="FairnessLimit" type="Integer" array="False" size=""/>
+            <declare name="AvgConsultMinutes" type="Integer" array="False" size=""/>
+            <declare name="choice" type="Integer" array="False" size=""/>
+            <declare name="i" type="Integer" array="False" size=""/>
+            <declare name="running" type="Boolean" array="False" size=""/>
+            <comment text="stats: 0 eCount, 1 uCount, 2 rCount, 3 totalRegistered, 4 servedCount, 5 consecutiveUrgent, 6 eTotal, 7 uTotal, 8 rTotal, 9 infectiousCount"/>
+            <declare name="stats" type="Integer" array="True" size="10"/>
+            <declare name="eName" type="String" array="True" size="200"/>
+            <declare name="uName" type="String" array="True" size="200"/>
+            <declare name="rName" type="String" array="True" size="200"/>
+            <declare name="eTicket" type="Integer" array="True" size="200"/>
+            <declare name="uTicket" type="Integer" array="True" size="200"/>
+            <declare name="rTicket" type="Integer" array="True" size="200"/>
+            <assign variable="MaxQueueSize" expression="200"/>
+            <assign variable="FairnessLimit" expression="4"/>
+            <assign variable="AvgConsultMinutes" expression="10"/>
+            <for variable="i" start="0" end="9" direction="inc" step="1">
+                <assign variable="stats[i]" expression="0"/>
+            </for>
+            <assign variable="running" expression="true"/>
+            <while expression="running == true">
+                <call expression="DisplayMenu()"/>
+                <assign variable="choice" expression="GetValidatedInteger(&quot;Enter choice (1-5)&quot;, 1, 5)"/>
+                <if expression="choice == 1">
+                    <then>
+                        <call expression="RegisterPatient(eName, eTicket, uName, uTicket, rName, rTicket, stats, MaxQueueSize, AvgConsultMinutes)"/>
+                    </then>
+                    <else>
+                        <if expression="choice == 2">
+                            <then>
+                                <call expression="CallNextPatient(eName, eTicket, uName, uTicket, rName, rTicket, stats, FairnessLimit)"/>
+                            </then>
+                            <else>
+                                <if expression="choice == 3">
+                                    <then>
+                                        <call expression="ShowQueueStatus(eName, uName, rName, stats)"/>
+                                    </then>
+                                    <else>
+                                        <if expression="choice == 4">
+                                            <then>
+                                                <call expression="GenerateDailySummary(stats)"/>
+                                            </then>
+                                            <else>
+                                                <assign variable="running" expression="false"/>
+                                            </else>
+                                        </if>
+                                    </else>
+                                </if>
+                            </else>
+                        </if>
+                    </else>
+                </if>
+            </while>
+            <output expression="&quot;System closed. Stay safe.&quot;" newline="True"/>
+        </body>
+    </function>
+    <function name="DisplayMenu" type="None" variable="">
+        <parameters/>
+        <body>
+            <output expression="&quot;========== MEDIQUEUE SL ==========&quot;" newline="True"/>
+            <output expression="&quot;1 Register patient&quot;" newline="True"/>
+            <output expression="&quot;2 Call next patient&quot;" newline="True"/>
+            <output expression="&quot;3 Show queue status&quot;" newline="True"/>
+            <output expression="&quot;4 Daily summary&quot;" newline="True"/>
+            <output expression="&quot;5 Exit&quot;" newline="True"/>
+        </body>
+    </function>
+    <function name="GetValidatedInteger" type="Integer" variable="value">
+        <parameters>
+            <parameter name="prompt" type="String" array="False"/>
+            <parameter name="low" type="Integer" array="False"/>
+            <parameter name="high" type="Integer" array="False"/>
+        </parameters>
+        <body>
+            <declare name="value" type="Integer" array="False" size=""/>
+            <do expression="value &lt; low OR value &gt; high">
+                <output expression="prompt" newline="True"/>
+                <input variable="value"/>
+                <if expression="value &lt; low OR value &gt; high">
+                    <then>
+                        <output expression="&quot;Invalid. Enter &quot; &amp; low &amp; &quot; to &quot; &amp; high" newline="True"/>
+                    </then>
+                    <else/>
+                </if>
+            </do>
+        </body>
+    </function>
+    <function name="GetValidatedReal" type="Real" variable="value">
+        <parameters>
+            <parameter name="prompt" type="String" array="False"/>
+            <parameter name="low" type="Real" array="False"/>
+            <parameter name="high" type="Real" array="False"/>
+        </parameters>
+        <body>
+            <declare name="value" type="Real" array="False" size=""/>
+            <do expression="value &lt; low OR value &gt; high">
+                <output expression="prompt" newline="True"/>
+                <input variable="value"/>
+                <if expression="value &lt; low OR value &gt; high">
+                    <then>
+                        <output expression="&quot;Invalid. Enter &quot; &amp; low &amp; &quot; to &quot; &amp; high" newline="True"/>
+                    </then>
+                    <else/>
+                </if>
+            </do>
+        </body>
+    </function>
+    <function name="GetYesNo" type="Boolean" variable="result">
+        <parameters>
+            <parameter name="prompt" type="String" array="False"/>
+        </parameters>
+        <body>
+            <declare name="answer" type="String" array="False" size=""/>
+            <declare name="valid" type="Boolean" array="False" size=""/>
+            <declare name="result" type="Boolean" array="False" size=""/>
+            <do expression="valid == false">
+                <output expression="prompt &amp; &quot; (Y/N)&quot;" newline="True"/>
+                <input variable="answer"/>
+                <assign variable="valid" expression="answer == &quot;Y&quot; OR answer == &quot;y&quot; OR answer == &quot;N&quot; OR answer == &quot;n&quot;"/>
+                <if expression="valid == false">
+                    <then>
+                        <output expression="&quot;Please enter Y or N&quot;" newline="True"/>
+                    </then>
+                    <else/>
+                </if>
+            </do>
+            <assign variable="result" expression="answer == &quot;Y&quot; OR answer == &quot;y&quot;"/>
+        </body>
+    </function>
+    <function name="AssignPriority" type="Integer" variable="result">
+        <parameters>
+            <parameter name="age" type="Integer" array="False"/>
+            <parameter name="temperature" type="Real" array="False"/>
+            <parameter name="days" type="Integer" array="False"/>
+            <parameter name="unconscious" type="Boolean" array="False"/>
+            <parameter name="severeBleeding" type="Boolean" array="False"/>
+            <parameter name="breathingDifficulty" type="Boolean" array="False"/>
+            <parameter name="pregnant" type="Boolean" array="False"/>
+            <parameter name="dangerSign" type="Boolean" array="False"/>
+        </parameters>
+        <body>
+            <comment text="Constants: CHILD_AGE_LIMIT 5, ELDERLY_AGE_LIMIT 65, FEVER_LIMIT 38.0, HIGH_FEVER_LIMIT 39.5, LONG_ILLNESS_DAYS 3"/>
+            <declare name="isEmergency" type="Boolean" array="False" size=""/>
+            <declare name="isUrgent" type="Boolean" array="False" size=""/>
+            <declare name="result" type="Integer" array="False" size=""/>
+            <assign variable="isEmergency" expression="unconscious OR severeBleeding OR breathingDifficulty OR (pregnant AND dangerSign) OR (age &lt; 5 AND temperature &gt;= 39.5)"/>
+            <assign variable="isUrgent" expression="temperature &gt;= 38.0 OR pregnant OR age &lt; 5 OR age &gt;= 65 OR days &gt;= 3"/>
+            <if expression="isEmergency">
+                <then>
+                    <assign variable="result" expression="1"/>
+                </then>
+                <else>
+                    <if expression="isUrgent">
+                        <then>
+                            <assign variable="result" expression="2"/>
+                        </then>
+                        <else>
+                            <assign variable="result" expression="3"/>
+                        </else>
+                    </if>
+                </else>
+            </if>
+        </body>
+    </function>
+    <function name="ColourName" type="String" variable="colour">
+        <parameters>
+            <parameter name="priority" type="Integer" array="False"/>
+        </parameters>
+        <body>
+            <declare name="colour" type="String" array="False" size=""/>
+            <if expression="priority == 1">
+                <then>
+                    <assign variable="colour" expression="&quot;RED&quot;"/>
+                </then>
+                <else>
+                    <if expression="priority == 2">
+                        <then>
+                            <assign variable="colour" expression="&quot;YELLOW&quot;"/>
+                        </then>
+                        <else>
+                            <assign variable="colour" expression="&quot;GREEN&quot;"/>
+                        </else>
+                    </if>
+                </else>
+            </if>
+        </body>
+    </function>
+    <function name="EstimateWaitTime" type="Integer" variable="result">
+        <parameters>
+            <parameter name="priority" type="Integer" array="False"/>
+            <parameter name="stats" type="Integer" array="True"/>
+            <parameter name="avgMinutes" type="Integer" array="False"/>
+        </parameters>
+        <body>
+            <declare name="ahead" type="Integer" array="False" size=""/>
+            <declare name="result" type="Integer" array="False" size=""/>
+            <if expression="priority == 1">
+                <then>
+                    <assign variable="ahead" expression="stats[0] - 1"/>
+                </then>
+                <else>
+                    <if expression="priority == 2">
+                        <then>
+                            <assign variable="ahead" expression="stats[0] + stats[1] - 1"/>
+                        </then>
+                        <else>
+                            <assign variable="ahead" expression="stats[0] + stats[1] + stats[2] - 1"/>
+                        </else>
+                    </if>
+                </else>
+            </if>
+            <assign variable="result" expression="ahead * avgMinutes"/>
+        </body>
+    </function>
+    <function name="AddToQueue" type="None" variable="">
+        <parameters>
+            <parameter name="priority" type="Integer" array="False"/>
+            <parameter name="patientName" type="String" array="False"/>
+            <parameter name="ticketNo" type="Integer" array="False"/>
+            <parameter name="eName" type="String" array="True"/>
+            <parameter name="eTicket" type="Integer" array="True"/>
+            <parameter name="uName" type="String" array="True"/>
+            <parameter name="uTicket" type="Integer" array="True"/>
+            <parameter name="rName" type="String" array="True"/>
+            <parameter name="rTicket" type="Integer" array="True"/>
+            <parameter name="stats" type="Integer" array="True"/>
+        </parameters>
+        <body>
+            <if expression="priority == 1">
+                <then>
+                    <assign variable="eName[stats[0]]" expression="patientName"/>
+                    <assign variable="eTicket[stats[0]]" expression="ticketNo"/>
+                    <assign variable="stats[0]" expression="stats[0] + 1"/>
+                    <assign variable="stats[6]" expression="stats[6] + 1"/>
+                </then>
+                <else>
+                    <if expression="priority == 2">
+                        <then>
+                            <assign variable="uName[stats[1]]" expression="patientName"/>
+                            <assign variable="uTicket[stats[1]]" expression="ticketNo"/>
+                            <assign variable="stats[1]" expression="stats[1] + 1"/>
+                            <assign variable="stats[7]" expression="stats[7] + 1"/>
+                        </then>
+                        <else>
+                            <assign variable="rName[stats[2]]" expression="patientName"/>
+                            <assign variable="rTicket[stats[2]]" expression="ticketNo"/>
+                            <assign variable="stats[2]" expression="stats[2] + 1"/>
+                            <assign variable="stats[8]" expression="stats[8] + 1"/>
+                        </else>
+                    </if>
+                </else>
+            </if>
+            <assign variable="stats[3]" expression="stats[3] + 1"/>
+        </body>
+    </function>
+    <function name="RegisterPatient" type="None" variable="">
+        <parameters>
+            <parameter name="eName" type="String" array="True"/>
+            <parameter name="eTicket" type="Integer" array="True"/>
+            <parameter name="uName" type="String" array="True"/>
+            <parameter name="uTicket" type="Integer" array="True"/>
+            <parameter name="rName" type="String" array="True"/>
+            <parameter name="rTicket" type="Integer" array="True"/>
+            <parameter name="stats" type="Integer" array="True"/>
+            <parameter name="maxQueue" type="Integer" array="False"/>
+            <parameter name="avgMinutes" type="Integer" array="False"/>
+        </parameters>
+        <body>
+            <declare name="patientName" type="String" array="False" size=""/>
+            <declare name="sex" type="String" array="False" size=""/>
+            <declare name="age" type="Integer" array="False" size=""/>
+            <declare name="days" type="Integer" array="False" size=""/>
+            <declare name="priority" type="Integer" array="False" size=""/>
+            <declare name="ticketNo" type="Integer" array="False" size=""/>
+            <declare name="waitMinutes" type="Integer" array="False" size=""/>
+            <declare name="temperature" type="Real" array="False" size=""/>
+            <declare name="unconscious" type="Boolean" array="False" size=""/>
+            <declare name="severeBleeding" type="Boolean" array="False" size=""/>
+            <declare name="breathingDifficulty" type="Boolean" array="False" size=""/>
+            <declare name="suspectedInfectious" type="Boolean" array="False" size=""/>
+            <declare name="pregnant" type="Boolean" array="False" size=""/>
+            <declare name="dangerSign" type="Boolean" array="False" size=""/>
+            <declare name="queueFull" type="Boolean" array="False" size=""/>
+            <assign variable="ticketNo" expression="stats[3] + 1"/>
+            <output expression="&quot;Patient name:&quot;" newline="True"/>
+            <input variable="patientName"/>
+            <output expression="&quot;Sex (F or M):&quot;" newline="True"/>
+            <input variable="sex"/>
+            <assign variable="age" expression="GetValidatedInteger(&quot;Age in years (0-120)&quot;, 0, 120)"/>
+            <assign variable="temperature" expression="GetValidatedReal(&quot;Temperature in C (30.0-45.0)&quot;, 30.0, 45.0)"/>
+            <assign variable="days" expression="GetValidatedInteger(&quot;Days ill (0-365)&quot;, 0, 365)"/>
+            <assign variable="unconscious" expression="GetYesNo(&quot;Unconscious or convulsing?&quot;)"/>
+            <assign variable="severeBleeding" expression="GetYesNo(&quot;Severe bleeding?&quot;)"/>
+            <assign variable="breathingDifficulty" expression="GetYesNo(&quot;Difficulty breathing?&quot;)"/>
+            <assign variable="suspectedInfectious" expression="GetYesNo(&quot;Signs of cholera, Lassa fever or Ebola?&quot;)"/>
+            <if expression="(sex == &quot;F&quot; OR sex == &quot;f&quot;) AND age &gt;= 12 AND age &lt;= 50">
+                <then>
+                    <assign variable="pregnant" expression="GetYesNo(&quot;Pregnant?&quot;)"/>
+                    <if expression="pregnant == true">
+                        <then>
+                            <assign variable="dangerSign" expression="GetYesNo(&quot;Pregnancy danger sign?&quot;)"/>
+                        </then>
+                        <else>
+                            <assign variable="dangerSign" expression="false"/>
+                        </else>
+                    </if>
+                </then>
+                <else>
+                    <assign variable="pregnant" expression="false"/>
+                    <assign variable="dangerSign" expression="false"/>
+                </else>
+            </if>
+            <assign variable="priority" expression="AssignPriority(age, temperature, days, unconscious, severeBleeding, breathingDifficulty, pregnant, dangerSign)"/>
+            <assign variable="queueFull" expression="(priority == 1 AND stats[0] &gt;= maxQueue) OR (priority == 2 AND stats[1] &gt;= maxQueue) OR (priority == 3 AND stats[2] &gt;= maxQueue)"/>
+            <if expression="queueFull == true">
+                <then>
+                    <output expression="&quot;Queue full. Refer patient to the nearest CHC.&quot;" newline="True"/>
+                </then>
+                <else>
+                    <call expression="AddToQueue(priority, patientName, ticketNo, eName, eTicket, uName, uTicket, rName, rTicket, stats)"/>
+                    <if expression="suspectedInfectious == true">
+                        <then>
+                            <assign variable="stats[9]" expression="stats[9] + 1"/>
+                            <output expression="&quot;ALERT: isolate patient and inform the nurse in charge.&quot;" newline="True"/>
+                        </then>
+                        <else/>
+                    </if>
+                    <assign variable="waitMinutes" expression="EstimateWaitTime(priority, stats, avgMinutes)"/>
+                    <output expression="&quot;============ MEDIQUEUE SL TICKET ============&quot;" newline="True"/>
+                    <output expression="&quot;Ticket No: &quot; &amp; ticketNo &amp; &quot;   Name: &quot; &amp; patientName" newline="True"/>
+                    <output expression="&quot;Priority: &quot; &amp; ColourName(priority)" newline="True"/>
+                    <output expression="&quot;Estimated wait: &quot; &amp; waitMinutes &amp; &quot; minutes&quot;" newline="True"/>
+                    <output expression="&quot;=============================================&quot;" newline="True"/>
+                </else>
+            </if>
+        </body>
+    </function>
+    <function name="CallNextPatient" type="None" variable="">
+        <parameters>
+            <parameter name="eName" type="String" array="True"/>
+            <parameter name="eTicket" type="Integer" array="True"/>
+            <parameter name="uName" type="String" array="True"/>
+            <parameter name="uTicket" type="Integer" array="True"/>
+            <parameter name="rName" type="String" array="True"/>
+            <parameter name="rTicket" type="Integer" array="True"/>
+            <parameter name="stats" type="Integer" array="True"/>
+            <parameter name="fairnessLimit" type="Integer" array="False"/>
+        </parameters>
+        <body>
+            <declare name="i" type="Integer" array="False" size=""/>
+            <declare name="calledTicket" type="Integer" array="False" size=""/>
+            <declare name="calledPriority" type="Integer" array="False" size=""/>
+            <declare name="calledName" type="String" array="False" size=""/>
+            <if expression="stats[0] + stats[1] + stats[2] == 0">
+                <then>
+                    <output expression="&quot;No patients are waiting.&quot;" newline="True"/>
+                </then>
+                <else>
+                    <if expression="stats[0] &gt; 0">
+                        <then>
+                            <assign variable="calledName" expression="eName[0]"/>
+                            <assign variable="calledTicket" expression="eTicket[0]"/>
+                            <for variable="i" start="0" end="stats[0] - 2" direction="inc" step="1">
+                                <assign variable="eName[i]" expression="eName[i + 1]"/>
+                                <assign variable="eTicket[i]" expression="eTicket[i + 1]"/>
+                            </for>
+                            <assign variable="stats[0]" expression="stats[0] - 1"/>
+                            <assign variable="calledPriority" expression="1"/>
+                        </then>
+                        <else>
+                            <if expression="stats[1] &gt; 0 AND NOT (stats[5] &gt;= fairnessLimit AND stats[2] &gt; 0)">
+                                <then>
+                                    <assign variable="calledName" expression="uName[0]"/>
+                                    <assign variable="calledTicket" expression="uTicket[0]"/>
+                                    <for variable="i" start="0" end="stats[1] - 2" direction="inc" step="1">
+                                        <assign variable="uName[i]" expression="uName[i + 1]"/>
+                                        <assign variable="uTicket[i]" expression="uTicket[i + 1]"/>
+                                    </for>
+                                    <assign variable="stats[1]" expression="stats[1] - 1"/>
+                                    <assign variable="calledPriority" expression="2"/>
+                                    <assign variable="stats[5]" expression="stats[5] + 1"/>
+                                </then>
+                                <else>
+                                    <assign variable="calledName" expression="rName[0]"/>
+                                    <assign variable="calledTicket" expression="rTicket[0]"/>
+                                    <for variable="i" start="0" end="stats[2] - 2" direction="inc" step="1">
+                                        <assign variable="rName[i]" expression="rName[i + 1]"/>
+                                        <assign variable="rTicket[i]" expression="rTicket[i + 1]"/>
+                                    </for>
+                                    <assign variable="stats[2]" expression="stats[2] - 1"/>
+                                    <assign variable="calledPriority" expression="3"/>
+                                    <assign variable="stats[5]" expression="0"/>
+                                </else>
+                            </if>
+                        </else>
+                    </if>
+                    <assign variable="stats[4]" expression="stats[4] + 1"/>
+                    <output expression="&quot;Now calling: &quot; &amp; calledName &amp; &quot; | &quot; &amp; ColourName(calledPriority) &amp; &quot; | Ticket &quot; &amp; calledTicket" newline="True"/>
+                </else>
+            </if>
+        </body>
+    </function>
+    <function name="ShowQueueStatus" type="None" variable="">
+        <parameters>
+            <parameter name="eName" type="String" array="True"/>
+            <parameter name="uName" type="String" array="True"/>
+            <parameter name="rName" type="String" array="True"/>
+            <parameter name="stats" type="Integer" array="True"/>
+        </parameters>
+        <body>
+            <declare name="i" type="Integer" array="False" size=""/>
+            <output expression="&quot;EMERGENCY (RED): &quot; &amp; stats[0]" newline="True"/>
+            <for variable="i" start="0" end="stats[0] - 1" direction="inc" step="1">
+                <output expression="(i + 1) &amp; &quot;. &quot; &amp; eName[i]" newline="True"/>
+            </for>
+            <output expression="&quot;URGENT (YELLOW): &quot; &amp; stats[1]" newline="True"/>
+            <for variable="i" start="0" end="stats[1] - 1" direction="inc" step="1">
+                <output expression="(i + 1) &amp; &quot;. &quot; &amp; uName[i]" newline="True"/>
+            </for>
+            <output expression="&quot;ROUTINE (GREEN): &quot; &amp; stats[2]" newline="True"/>
+            <for variable="i" start="0" end="stats[2] - 1" direction="inc" step="1">
+                <output expression="(i + 1) &amp; &quot;. &quot; &amp; rName[i]" newline="True"/>
+            </for>
+        </body>
+    </function>
+    <function name="GenerateDailySummary" type="None" variable="">
+        <parameters>
+            <parameter name="stats" type="Integer" array="True"/>
+        </parameters>
+        <body>
+            <declare name="pct" type="Real" array="False" size=""/>
+            <if expression="stats[3] == 0">
+                <then>
+                    <output expression="&quot;No patients registered today.&quot;" newline="True"/>
+                </then>
+                <else>
+                    <output expression="&quot;Registered: &quot; &amp; stats[3] &amp; &quot;   Served: &quot; &amp; stats[4]" newline="True"/>
+                    <assign variable="pct" expression="stats[6] * 100.0 / stats[3]"/>
+                    <output expression="&quot;Emergency: &quot; &amp; stats[6] &amp; &quot; (&quot; &amp; Int(pct * 10 + 0.5) / 10 &amp; &quot;%)&quot;" newline="True"/>
+                    <assign variable="pct" expression="stats[7] * 100.0 / stats[3]"/>
+                    <output expression="&quot;Urgent: &quot; &amp; stats[7] &amp; &quot; (&quot; &amp; Int(pct * 10 + 0.5) / 10 &amp; &quot;%)&quot;" newline="True"/>
+                    <assign variable="pct" expression="stats[8] * 100.0 / stats[3]"/>
+                    <output expression="&quot;Routine: &quot; &amp; stats[8] &amp; &quot; (&quot; &amp; Int(pct * 10 + 0.5) / 10 &amp; &quot;%)&quot;" newline="True"/>
+                    <output expression="&quot;Suspected infectious cases: &quot; &amp; stats[9]" newline="True"/>
+                </else>
+            </if>
+        </body>
+    </function>
+</flowgorithm>

@@ -141,7 +141,8 @@ The system needs no internet or special hardware. Queue size, fairness limit and
 
 ## 11. Licence
 
-Released under the MIT Licence 
+Released under the MIT Licence (add a `LICENSE` file to the repository).
+
 ## 12. References
 
 - Digital Public Goods Alliance (n.d.) *The Digital Public Goods Standard*. Available at: https://www.digitalpublicgoods.net/standard/
