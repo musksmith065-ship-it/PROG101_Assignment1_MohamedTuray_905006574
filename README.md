@@ -13,7 +13,6 @@ Department of Information and Communication Technology | Semester 01 (September 
 | **Examiner** | Elijah Fullah |
 | **Tool** | Flowgorithm (flowchart and pseudocode) |
 
-> This assignment is a logical design. No source code is written, as required by the brief.
 
 ---
 
